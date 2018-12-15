@@ -1,11 +1,9 @@
 package mapreduce
 
 import (
-	"fmt"
-	"os"
 	"encoding/json"
-	"io"
 	"log"
+	"os"
 )
 
 // doReduce does the job of a reduce worker: it reads the intermediate
@@ -53,4 +51,55 @@ func doReduce(
 	// 　S2：获取中间文件的数据(对多个map产生的文件更加值合并)
 	// 　S3：打开文件（mergeName获取文件名），将用于存储Reduce任务的结果
 	// 　S4：合并结果之后(S2)，进行reduceF操作, work count的操作将结果累加，也就是word出现在这个文件中出现的次数
+	interResult := make(map[string][]string)
+	mergeFileName := mergeName(jobName,reduceTaskNumber)
+	//mutex := sync.Mutex{}
+	//var wg sync.WaitGroup
+	//wg.Add(nMap)
+	interFileList := make([]*os.File,0)
+	defer closeAllFile(interFileList)
+	for i := 0;i < nMap;i++{
+		log.Printf("process %d-%d",i,reduceTaskNumber)
+		fileName := reduceName(jobName,i,reduceTaskNumber)
+		intermediateFile ,err := os.Open(fileName);if err != nil{
+			//todo
+		}
+		interFileList = append(interFileList,intermediateFile)
+		dec := json.NewDecoder(intermediateFile)
+		/*go*/ subDecode(dec,interResult/*,&mutex,wg*/)
+		log.Printf("after decode %s,map size = %d",fileName,len(interResult))
+	}
+	//wg.Wait()
+	//wait go work done
+	log.Printf("process reduce %d done",reduceTaskNumber)
+	mergeFile,err := os.OpenFile(mergeFileName,os.O_CREATE|os.O_RDWR,0644);if err != nil{
+		log.Fatalf("open file %s failed with msg: %v",mergeFileName,err)
+		return
+	}
+	enc := json.NewEncoder(mergeFile)
+	for key,val := range interResult{
+		thisCount := reduceF(key,val)
+		enc.Encode(KeyValue{key,thisCount})
+	}
+	mergeFile.Close()
+}
+
+func subDecode(deCodeFile *json.Decoder,interResult map[string][]string,/*mutex *sync.Mutex,wg sync.WaitGroup*/){
+	log.Printf("now map size = %d",len(interResult))
+	for{
+		var tmp KeyValue
+		if err := deCodeFile.Decode(&tmp);err != nil{
+			break
+		}
+		//mutex.Lock()
+		interResult[tmp.Key] = append(interResult[tmp.Key], tmp.Value)
+		//mutex.Unlock()
+	}
+	//wg.Done()
+}
+
+func closeAllFile(fileList []*os.File){
+	for _,file:=range fileList{
+		file.Close()
+	}
 }
