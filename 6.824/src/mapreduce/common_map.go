@@ -46,30 +46,6 @@ func doMap(
 	//     err := enc.Encode(&kv)
 	//
 	// Remember to close the file after you have written all the values!
-
-	// 你需要重写这个函数。你可以通过reduceName获取文件名,使用map任务的输入为reduce任务提供输出。
-	// 下面给出的ihash函数应该被用于决定每个key属于的文件。
-	//
-	// map任务的中间输入以多文件的形式保存在文件系统上,它们的文件名说明是哪个map任务产生的,同时也说明哪个reduce任务会处理它们。
-	// 想出如何存储键/值对在磁盘上的方案可能会非常棘手,特别地, 当我们考虑到key和value都包含新行(newlines),引用(quotes),或者其他
-	// 你想到的字符。
-	//
-	// 有一种格式经常被用来序列化数据到字节流,然后可以通过字节流进行重建，这种格式是json。你没有被强制使用JSON,但是reduce任务的输出
-	// 必须是JSON格式,熟悉JSON数据格式会对你有所帮助。你可以使用下面的代码将数据结构以JSON字符串的形式输出。对应的解码函数在common_reduce.go
-	// 可以找到。
-	//
-	//   enc := json.NewEncoder(file)
-	//   for _, kv := ... {
-	//     err := enc.Encode(&kv)
-	//
-	//   记得关闭文件当你写完全部的数据之后。
-
-
-	// 注：Map的大致流程如下(官方教材建议不上传代码，所以去除)
-	// 　S1: 　打开输入文件，并且读取全部数据
-	//  S2： 调用用户自定义的mapF函数,分检数据,在word count的案例中分割成单词
-	//  S3： 将mapF返回的数据根据key分类,跟文件名对应(reduceName获取文件名)
-	// 　S4: 　将分类好的数据分别写入不同文件
 	oriDataFile,err := os.Open(inFile); if err != nil{
 		log.Fatalf("open %s file with %v",inFile,err)
 		return

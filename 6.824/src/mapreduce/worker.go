@@ -80,7 +80,7 @@ func RunWorker(MasterAddress string, me string,
 		log.Fatal("RunWorker: worker ", me, " error: ", e)
 	}
 	wk.l = l
-	wk.register(MasterAddress)
+	wk.register(MasterAddress)               //通知master server,this worker ready to work
 
 	// DON'T MODIFY CODE BELOW
 	for {
@@ -103,6 +103,9 @@ func RunWorker(MasterAddress string, me string,
 			break
 		}
 	}
+	/**
+	意思就是说一个worker最多只接受nRpc次请求?，用完了就推出worker主协成?
+	*/
 	wk.l.Close()
 	debug("RunWorker %s exit\n", me)
 }

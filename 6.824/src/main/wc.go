@@ -7,6 +7,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"unicode"
 )
 
 // The mapping function is called once for each piece of the input.
@@ -16,7 +17,7 @@ import (
 func mapF(document string, value string) (res []mapreduce.KeyValue) {
 	// 在wordcount的例子中mapF的功能应该是string中获取到单词（关注下strings.FieldsFunc打用法吧），
 	// 返回的结构应该类似KeyValue{w, "1"}
-	contentSlice := strings.Fields(value)
+	contentSlice := strings.FieldsFunc(value,unicode.IsSpace)
 	for _,word:= range contentSlice{
 		res = append(res, mapreduce.KeyValue{word,"1"})
 	}
@@ -47,6 +48,7 @@ func reduceF(key string, values []string) string {
 // 2) Master (e.g., go run wc.go master localhost:7777 x1.txt .. xN.txt)
 // 3) Worker (e.g., go run wc.go worker localhost:7777 localhost:7778 &)
 func main() {
+	log.SetFlags(log.Lshortfile | log.LstdFlags)
 	if len(os.Args) < 4 {
 		fmt.Printf("%s: see usage comments in file\n", os.Args[0])
 	} else if os.Args[1] == "master" {
